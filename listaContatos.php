@@ -6,7 +6,9 @@
     if(!$verificaUsuarioLogado){
         header("Location: index.php?codMsg=003");
     } else {
+        include 'conectaBanco.php';
         $nomeUsuarioLogado = $_SESSION['nomeUsuarioLogado'];
+        $codigoUsuarioLogado = $_SESSION['codigoUsuarioLogado'];
     }
 ?>
 
@@ -109,34 +111,60 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <th scope="row">{id}</th>
-                                        <td>{nome}</td>
-                                        <td>{telefone}</td>
-                                        <td>{email}</td>
-                                        <td>
-                                            <div class="dropdown">
-                                                <a class="btn btn-secondary dropdown-toggle btn-sm" href="#" role="button" 
-                                                id="{id}" data-toggle="dropdown" aria-haspopup="true" 
-                                                aria-expanded="false">
-                                                    Ações
-                                                </a>
-                                              
-                                                <div class="dropdown-menu" aria-labelledby="{id}">
-                                                    <a class="dropdown-item" href="#" data-toggle="modal"
-                                                    data-target="#visualizarContato" data-whatever="{id}">
-                                                        <i class="bi-eye"></i> Visualizar
+                                    <?php
+                                      if (isset($_GET['busca'])) {
+                                        $busca = '%' . $_GET['busca'] . '%';
+                                      } else {
+                                        $busca = '%%';
+                                      }
+
+                                      $sqlContatos = "SELECT codigoContato, nomeContato, mailContato, telefone1Contato FROM
+                                                      contatos WHERE codigoUsuario=:codigoUsuario AND nomeContato LIKE :busca 
+                                                      ORDER BY nomeContato";
+                                      
+                                      $sqlContatosST = $conexao->prepare($sqlContatos);
+                                      $sqlContatosST->bindValue(':codigoUsuario', $codigoUsuarioLogado);
+                                      $sqlContatosST->bindValue(':busca', $busca);
+
+                                      $sqlContatosST->execute();
+                                      $quantidadeContatos = $sqlContatosST->rowCount();
+
+                                      if ($quantidadeContatos > 0) {
+                                        $resultadoContatos = $sqlContatosST->fetchALL();
+
+                                        foreach ($resultadoContatos as list($codigoContato, $nomeContato, $mailContato,
+                                                $telefone1Contato)) {
+                                                
+                                        echo "<tr>
+                                                <th scope=\"row\">$codigoContato</th>
+                                                <td>$nomeContato</td>
+                                                <td>$telefone1Contato</td>
+                                                <td>$mailContato</td>
+                                                <td>
+                                                  <div class=\"dropdown\">
+                                                    <a class=\"btn btn-secondary dropdown-toggle btn-sm\" href=\"#\" role=\"button\" id=\"{id}\" 
+                                                      data-toggle=\"dropdown\" aria-haspopup=\"true\" aria-expanded=\"false\">
+                                                      Ações
                                                     </a>
-                                                    <a class="dropdown-item" href="#">
-                                                        <i class="bi-pencil"></i> Editar
-                                                    </a>
-                                                    <a class="dropdown-item" href="#">
-                                                        <i class="bi-trash"></i> Excluir
-                                                    </a>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                                    
+                                                    <div class=\"dropdown-menu\" aria-labelledby=\"{id}\">
+                                                      <a class=\"dropdown-item\" href=\"#\" data-toggle=\"modal\" data-target=\"#visualizarContato\"
+                                                        data-whatever=\"$codigoContato\">
+                                                        <i class=\"bi-eye\"></i> Visualizar
+                                                      </a>
+                                                      <a class=\"dropdown-item\" href=\"#\">
+                                                        <i class=\"bi-pencil\"></i> Editar
+                                                      </a>
+                                                      <a class=\"dropdown-item\" href=\"#\">
+                                                        <i class=\"bi-trash\"></i> Excluir
+                                                      </a>
+                                                    </div>
+                                                  </div>
+                                                </td>
+                                            </tr>";
+                                        }
+                                      }
+                                    ?>
                                 </tbody>
                             </table>
                         </div>        
@@ -171,15 +199,17 @@
     </div>
     <div class="modal fade" id="visualizarContato" tabindex="-1" role="dialog" 
     aria-labelledby="visualizarDadosContato" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="visualizarDadosContato">Dados do contato</h5>
+                    <h4 class="modal-title" id="visualizarDadosContato">Dados do contato</h4>
                     <button class="close" type="button" data-dismiss="modal" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body"></div>
+                <div class="modal-body" id="dadosContato">
+
+                </div>
                 <div class="modal-footer">
                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Fechar</button>
                 </div>
@@ -187,5 +217,14 @@
         </div>
     </div>
 </body>
+<script>
+    $(document).ready(function() {
+        $('#visualizarContato').on('shoe.bs.modal', function () {
+            var origemContato = $(event.relatedTarget);
+            var codigoContato = origemContato.data('whatever');
 
+            $('#dadosContato').load('#visualizaCantato.php?codigoContato=' + codigoContato);
+        });
+    });
+</script>
 </html>
