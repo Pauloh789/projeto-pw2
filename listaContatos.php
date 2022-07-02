@@ -152,10 +152,11 @@
                                                         data-whatever=\"$codigoContato\">
                                                         <i class=\"bi-eye\"></i> Visualizar
                                                       </a>
-                                                      <a class=\"dropdown-item\" href=\"#\">
+                                                      <a class=\"dropdown-item\" href=\"cadastroContato.php?codigoContato=$codigoContato\">
                                                         <i class=\"bi-pencil\"></i> Editar
                                                       </a>
-                                                      <a class=\"dropdown-item\" href=\"#\">
+                                                      <a class=\"dropdown-item\" href=\"excluirContato.php?codigoContato=$codigoContato\" 
+                                                        onclick=\"return confirm('Deseja excluir esse contato?')\">
                                                         <i class=\"bi-trash\"></i> Excluir
                                                       </a>
                                                     </div>
